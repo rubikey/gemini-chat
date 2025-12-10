@@ -34,7 +34,8 @@ export default async function handler(req, res) {
 
   try {
     // Llamada a la API REST de Google Gemini
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // Usamos v1beta y el alias 'latest' que suele ser más seguro
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
     
     const response = await fetch(url, {
       method: "POST",
