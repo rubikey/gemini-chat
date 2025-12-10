@@ -36,7 +36,8 @@ export default async function handler(req, res) {
     // Llamada a la API REST de Google Gemini
    
 // Usamos el modelo estándar 'gemini-pro' que es el más compatible
-const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
     
     const response = await fetch(url, {
       method: "POST",
