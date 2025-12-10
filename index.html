@@ -1,59 +1,77 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat con Gemini</title>
+  <title>Gemini Assistant Pro</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  
   <style>
-    /* Diseño Estilo WhatsApp/Messenger */
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; height: 100vh; }
+    /* Estilo Moderno y Limpio */
+    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #e5e5f7; margin: 0; display: flex; justify-content: center; height: 100vh; }
     
-    .chat-container { width: 100%; max-width: 700px; background: white; display: flex; flex-direction: column; height: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .chat-container { width: 100%; max-width: 800px; background: #ffffff; display: flex; flex-direction: column; height: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
     
-    header { background: #4285F4; color: white; padding: 15px; text-align: center; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-    header button { background: none; border: 1px solid white; color: white; cursor: pointer; border-radius: 5px; padding: 5px 10px; font-size: 0.8rem; }
+    header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header button { background: rgba(255,255,255,0.2); border: none; color: white; cursor: pointer; border-radius: 4px; padding: 6px 12px; font-size: 0.85rem; transition: background 0.2s; }
+    header button:hover { background: rgba(255,255,255,0.3); }
+
+    #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #f8f9fa; scroll-behavior: smooth; }
     
-    #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #e5ddd5; }
+    .message { padding: 15px 18px; border-radius: 18px; max-width: 85%; word-wrap: break-word; line-height: 1.6; font-size: 0.95rem; position: relative; }
     
-    .message { padding: 10px 15px; border-radius: 15px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
-    .user { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .bot { background-color: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+    .user { background-color: #667eea; color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 2px 5px rgba(102,126,234,0.3); }
+    .bot { background-color: white; color: #2d3748; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
     
-    .input-area { padding: 15px; background: #f0f0f0; display: flex; gap: 10px; border-top: 1px solid #ddd; }
-    textarea { flex: 1; height: 40px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; resize: none; font-family: inherit; outline: none; }
-    button#send-btn { background: #4285F4; color: white; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-    button#send-btn:hover { background: #3367d6; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    /* Ajustes Matemáticos y de Texto */
+    .bot p { margin: 0 0 10px 0; }
+    .bot p:last-child { margin: 0; }
+    .bot strong { color: #5a67d8; } /* Negritas en azulito */
+    .katex { font-size: 1.1em; } /* Fórmulas un poco más grandes */
+    
+    .input-area { padding: 20px; background: white; display: flex; gap: 12px; border-top: 1px solid #edf2f7; align-items: flex-end; }
+    textarea { flex: 1; min-height: 44px; max-height: 120px; padding: 12px 16px; border-radius: 22px; border: 1px solid #cbd5e0; resize: none; font-family: inherit; outline: none; transition: border-color 0.2s; background: #f7fafc; }
+    textarea:focus { border-color: #667eea; background: white; }
+    
+    button#send-btn { background: #667eea; color: white; border: none; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: transform 0.1s, background 0.2s; box-shadow: 0 2px 6px rgba(102,126,234,0.4); }
+    button#send-btn:hover { background: #5a67d8; transform: scale(1.05); }
+    button#send-btn:active { transform: scale(0.95); }
+
+    /* Scrollbar bonita */
+    #chat-box::-webkit-scrollbar { width: 6px; }
+    #chat-box::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 3px; }
   </style>
 </head>
 <body>
 
   <div class="chat-container">
     <header>
-      <span>✨ Gemini Assistant</span>
-      <button onclick="borrarHistorial()">Borrar Chat</button>
+      <span>♾️ Gemini Math</span>
+      <button onclick="borrarHistorial()">🗑️ Borrar</button>
     </header>
     
     <div id="chat-box"></div>
 
     <div class="input-area">
-      <textarea id="inputTexto" placeholder="Escribe algo..."></textarea>
+      <textarea id="inputTexto" placeholder="Pregunta algo... (Enter para enviar)" rows="1"></textarea>
       <button id="send-btn" onclick="consultar()">➤</button>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <script>
     const chatBox = document.getElementById('chat-box');
     const inputTexto = document.getElementById('inputTexto');
 
-    // 1. Cargar historial al abrir
     window.onload = () => {
       const historial = JSON.parse(localStorage.getItem('chatHistory')) || [];
       historial.forEach(msg => agregarMensajeUI(msg.text, msg.sender));
     };
 
-    // 2. Detectar tecla ENTER
     inputTexto.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -65,45 +83,58 @@
       const texto = inputTexto.value.trim();
       if (!texto) return;
 
-      // Mostrar mensaje usuario y limpiar input
       agregarMensajeUI(texto, 'user');
       guardarEnHistorial(texto, 'user');
       inputTexto.value = '';
 
-      // Crear burbuja de "Pensando..."
-      const loadingId = agregarMensajeUI('Pensando...', 'bot', true);
+      const loadingId = agregarMensajeUI('Calculando...', 'bot', true);
 
       try {
-        // NOTA: Hemos cambiado la ruta a /api/gemini
         const res = await fetch("/api/gemini", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: texto })
         });
-        
         const data = await res.json();
-        
-        // Reemplazar "Pensando..." con la respuesta real
-        const botMsgDiv = document.getElementById(loadingId);
-        if (botMsgDiv) {
-            botMsgDiv.textContent = data.output || "Sin respuesta.";
-            // Re-renderizar para interpretar saltos de linea si es necesario
-            botMsgDiv.innerHTML = (data.output || "Sin respuesta.").replace(/\n/g, '<br>');
-        }
-        
-        guardarEnHistorial(data.output, 'bot');
+        const loadingDiv = document.getElementById(loadingId);
+        if (loadingDiv) loadingDiv.remove();
+
+        const respuesta = data.output || "Sin respuesta.";
+        agregarMensajeUI(respuesta, 'bot');
+        guardarEnHistorial(respuesta, 'bot');
 
       } catch (error) {
-        const botMsgDiv = document.getElementById(loadingId);
-        if(botMsgDiv) botMsgDiv.textContent = "Error al conectar con el servidor.";
+        const loadingDiv = document.getElementById(loadingId);
+        if (loadingDiv) loadingDiv.textContent = "Error de conexión.";
       }
     }
 
     function agregarMensajeUI(text, sender, isLoading = false) {
       const div = document.createElement('div');
       div.className = `message ${sender}`;
-      div.innerHTML = text.replace(/\n/g, '<br>'); // Respetar saltos de línea
       if(isLoading) div.id = 'loading-' + Date.now();
+
+      if (sender === 'user' || isLoading) {
+        div.textContent = text;
+      } else {
+        // 1. Limpiamos espacios extra en formulas para que KaTeX las detecte mejor
+        let cleanText = text.replace(/\$\$/g, '$$$$').replace(/\\\[/g, '$$$$').replace(/\\\]/g, '$$$$');
+        
+        // 2. Convertimos Markdown (negritas, listas) a HTML
+        div.innerHTML = marked.parse(cleanText);
+
+        // 3. Renderizamos las Matemáticas
+        renderMathInElement(div, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
       return div.id;
