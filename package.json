@@ -1,9 +1,6 @@
 
 {
-  "name": "chatgpt4o-assistant",
+  "name": "gemini-assistant",
   "version": "1.0.0",
-  "type": "module",
-  "engines": {
-    "node": "18.x"
-  }
+  "type": "module"
 }
