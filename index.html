@@ -3,44 +3,121 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title> - </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat con Gemini</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-    textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 10px; }
-    button { padding: 10px 20px; font-size: 16px; }
-    .respuesta { background: #f4f4f4; padding: 15px; margin-top: 15px; border-radius: 5px; white-space: pre-wrap; }
+    /* Diseño Estilo WhatsApp/Messenger */
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; height: 100vh; }
+    
+    .chat-container { width: 100%; max-width: 700px; background: white; display: flex; flex-direction: column; height: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    
+    header { background: #4285F4; color: white; padding: 15px; text-align: center; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    header button { background: none; border: 1px solid white; color: white; cursor: pointer; border-radius: 5px; padding: 5px 10px; font-size: 0.8rem; }
+    
+    #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #e5ddd5; }
+    
+    .message { padding: 10px 15px; border-radius: 15px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
+    .user { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .bot { background-color: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+    
+    .input-area { padding: 15px; background: #f0f0f0; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+    textarea { flex: 1; height: 40px; padding: 10px; border-radius: 20px; border: 1px solid #ccc; resize: none; font-family: inherit; outline: none; }
+    button#send-btn { background: #4285F4; color: white; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    button#send-btn:hover { background: #3367d6; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <h1> - </h1>
-  <p> - </p>
-  <textarea id="inputTexto" placeholder="Ejemplo: Explica qué es una interrupción en ARM..."></textarea><br>
-  <button onclick="consultar()">Enviar</button>
-  <div id="respuesta" class="respuesta"></div>
+
+  <div class="chat-container">
+    <header>
+      <span>✨ Gemini Assistant</span>
+      <button onclick="borrarHistorial()">Borrar Chat</button>
+    </header>
+    
+    <div id="chat-box"></div>
+
+    <div class="input-area">
+      <textarea id="inputTexto" placeholder="Escribe algo..."></textarea>
+      <button id="send-btn" onclick="consultar()">➤</button>
+    </div>
+  </div>
 
   <script>
-    async function consultar() {
-      const input = document.getElementById("inputTexto").value;
-      const respuestaDiv = document.getElementById("respuesta");
+    const chatBox = document.getElementById('chat-box');
+    const inputTexto = document.getElementById('inputTexto');
 
-      if (!input) {
-        alert("Escribe algo primero");
-        return;
+    // 1. Cargar historial al abrir
+    window.onload = () => {
+      const historial = JSON.parse(localStorage.getItem('chatHistory')) || [];
+      historial.forEach(msg => agregarMensajeUI(msg.text, msg.sender));
+    };
+
+    // 2. Detectar tecla ENTER
+    inputTexto.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        consultar();
       }
+    });
 
-      respuestaDiv.textContent = "Cargando respuesta...";
+    async function consultar() {
+      const texto = inputTexto.value.trim();
+      if (!texto) return;
+
+      // Mostrar mensaje usuario y limpiar input
+      agregarMensajeUI(texto, 'user');
+      guardarEnHistorial(texto, 'user');
+      inputTexto.value = '';
+
+      // Crear burbuja de "Pensando..."
+      const loadingId = agregarMensajeUI('Pensando...', 'bot', true);
 
       try {
-        const res = await fetch("/api/chatgpt", {
+        // NOTA: Hemos cambiado la ruta a /api/gemini
+        const res = await fetch("/api/gemini", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: input })
+          body: JSON.stringify({ prompt: texto })
         });
+        
         const data = await res.json();
-        respuestaDiv.textContent = data.output || "Sin respuesta.";
+        
+        // Reemplazar "Pensando..." con la respuesta real
+        const botMsgDiv = document.getElementById(loadingId);
+        if (botMsgDiv) {
+            botMsgDiv.textContent = data.output || "Sin respuesta.";
+            // Re-renderizar para interpretar saltos de linea si es necesario
+            botMsgDiv.innerHTML = (data.output || "Sin respuesta.").replace(/\n/g, '<br>');
+        }
+        
+        guardarEnHistorial(data.output, 'bot');
+
       } catch (error) {
-        respuestaDiv.textContent = "Error al conectar con ChatGPT.";
+        const botMsgDiv = document.getElementById(loadingId);
+        if(botMsgDiv) botMsgDiv.textContent = "Error al conectar con el servidor.";
       }
+    }
+
+    function agregarMensajeUI(text, sender, isLoading = false) {
+      const div = document.createElement('div');
+      div.className = `message ${sender}`;
+      div.innerHTML = text.replace(/\n/g, '<br>'); // Respetar saltos de línea
+      if(isLoading) div.id = 'loading-' + Date.now();
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div.id;
+    }
+
+    function guardarEnHistorial(text, sender) {
+      const historial = JSON.parse(localStorage.getItem('chatHistory')) || [];
+      historial.push({ text, sender });
+      localStorage.setItem('chatHistory', JSON.stringify(historial));
+    }
+
+    function borrarHistorial() {
+      localStorage.removeItem('chatHistory');
+      chatBox.innerHTML = '';
     }
   </script>
 </body>
